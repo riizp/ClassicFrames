@@ -16,6 +16,13 @@ local PlayerFrameHealthBarTextLeft = PlayerFrameHealthBar.LeftText
 local PlayerFrameHealthBarTextRight = PlayerFrameHealthBar.RightText
 local ranOnce = false
 
+
+-----TEMP SETTINGS- CHANGE VALUES HERE. true = enabled false= disabled
+local pClassColorHealth = true   --class colored player health bar
+local pClassColorNameBG = false	  --class colored player name background
+local tClassColorHealth = false   --class colored target/focus health bar
+local tClassColorNameBG = false	  --class colored target/focus name background
+
 function GetAtlasForBar(self)
 	local atlas = nil
 	if (self.powerType and (self.powerType >= 11 or self.powerType == 8)) then
@@ -57,7 +64,11 @@ local function updateBarColor(self, r, g, b, a)
 	if (self.powerType) then
 		color = GetPowerBarColor(self.powerType)
 	end
-	if (color.r ~= r or color.g ~= g or color.b ~= b) then
+	if pClassColorHealth then
+		local _, PlayerC = UnitClass("player")
+		local r, g, b = GetClassColor(PlayerC)
+		self:SetStatusBarColor(r, g, b)
+	elseif (color.r ~= r or color.g ~= g or color.b ~= b) then
 		self:SetStatusBarColor(color.r, color.g, color.b)
 	end
 end
@@ -83,9 +94,15 @@ PlayerFrameHealthBarTextRight:SetParent(PlayerFrame.PlayerFrameContainer)
 PlayerFrameManaBarTextRight:SetParent(PlayerFrame.PlayerFrameContainer)
 
 PlayerFrame.Background = PlayerFrame:CreateTexture(nil, "ARTWORK");
-PlayerFrame.Background:SetPoint("TOPLEFT", PlayerFrame, "TOPLEFT", 86, -26);
-PlayerFrame.Background:SetSize(119, 41)
+PlayerFrame.Background:SetPoint("TOPLEFT", PlayerFrame, "TOPLEFT", 86, -28);
+PlayerFrame.Background:SetSize(119, 17)
+if pClassColorNameBG then
+		local _, PlayerC = UnitClass("player")
+		local r, g, b = GetClassColor(PlayerC)
+		PlayerFrame.Background:SetColorTexture(r, g, b)
+else
 PlayerFrame.Background:SetColorTexture(0, 0, 0, 0.5)
+end
 
 local attackIconGlow = PlayerFrame.PlayerFrameContent.PlayerFrameContentContextual:CreateTexture(nil, "ARTWORK")
 PlayerFrame.PlayerFrameContent.PlayerFrameContentContextual.AttackIconGlow = attackIconGlow;

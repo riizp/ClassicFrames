@@ -4,6 +4,10 @@ function PermaHide(frameToHide)
 		frameToHide:Hide()
 	end)
 end
+--- TEMP SETTINGS RIIZ
+local tClassColorHealthbar =  true --class colored target hp bar
+local tClassColorNameBG = false   --Class colored name background
+local tNpcHealthReaction = true  --Change targetted npc health bar color according to reaction (Hostile = red, Friendly = green)
 
 function ApplyClassicFrame(frame)
 	local contextual = frame.TargetFrameContent.TargetFrameContentContextual;
@@ -17,14 +21,53 @@ function ApplyClassicFrame(frame)
 	frame.Background:SetSize(119, 41)
 	frame.Background:SetColorTexture(0, 0, 0, 0.5)
 	frame.TargetFrameContent.TargetFrameContentMain.HealthBar:SetStatusBarColor(0, 1, 0);
-
+	
 	if (GetCVar("comboPointLocation") == "1") then
 		ComboFrame:SetPoint("TOPRIGHT", TargetFrame, -25, -20)
 	end
 	
 	local function PositionTargetBars()
 		local powerColor = GetPowerBarColor(UnitPowerType(frame.unit))
-
+		
+		if tClassColorHealthbar  and UnitIsPlayer("target")  and frame == TargetFrame then
+			
+			local _, targetC = UnitClass("target")
+			local r, g, b = GetClassColor(targetC)
+			frame.TargetFrameContent.TargetFrameContentMain.HealthBar:SetStatusBarColor(r, g, b);
+		
+		elseif tClassColorHealthbar and UnitIsPlayer("focus") and frame == FocusFrame then
+			local _, targetC = UnitClass("focus")
+			local r, g, b = GetClassColor(targetC)
+			frame.TargetFrameContent.TargetFrameContentMain.HealthBar:SetStatusBarColor(r, g, b);
+		
+		elseif tNpcHealthReaction  and not UnitIsPlayer("target") and (frame == TargetFrame or frame ==FocusFrame) then
+			local reactionColor = {
+			enemy = {r=1,g=0,b=0}, --enemy
+			neutral = {r=1,g=1,b=0}, --neutral
+			friendly ={r=0,g=1,b=0}, --friendly
+			}
+			
+			local reaction = UnitReaction("player", "target");
+			local color = {r = 0,g = 0,b = 0} 
+			
+			if reaction == 2 then 
+				color.r = reactionColor.enemy.r
+				color.g = reactionColor.enemy.g
+				color.b = reactionColor.enemy.b
+			elseif reaction == 4 then 
+				color.r = reactionColor.neutral.r
+				color.g = reactionColor.neutral.g
+				color.b = reactionColor.neutral.b
+			elseif reaction == 5 then 
+				color.r = reactionColor.friendly.r
+				color.g = reactionColor.friendly.g
+				color.b = reactionColor.friendly.b
+			end
+			frame.TargetFrameContent.TargetFrameContentMain.HealthBar:SetStatusBarColor(color.r,color.g,color.b)
+		else
+		frame.TargetFrameContent.TargetFrameContentMain.HealthBar:SetStatusBarColor(0, 1, 0);
+		end
+		
 		local FrameManaBar = frame.TargetFrameContent.TargetFrameContentMain.ManaBar;
 		local FrameHealthBar = frame.TargetFrameContent.TargetFrameContentMain.HealthBar;
 
@@ -60,6 +103,7 @@ function ApplyClassicFrame(frame)
 		FrameHealthBar.LeftText:SetParent(frame.TargetFrameContainer)
 
 		FrameManaBar.TextString:SetParent(frame.TargetFrameContainer)
+		FrameManaBar.TextString:SetPoint("CENTER", frame.TargetFrameContainer, -29.5,-15)
 		FrameManaBar.RightText:SetParent(frame.TargetFrameContainer)
 		FrameManaBar.LeftText:SetParent(frame.TargetFrameContainer)
 		
@@ -75,12 +119,18 @@ function ApplyClassicFrame(frame)
 		frame.nameBackground:SetTexture("Interface\\TargetingFrame\\UI-TargetingFrame-LevelBackground")
 		frame.nameBackground:ClearAllPoints()
 		frame.nameBackground:SetPoint("TOPRIGHT", frame.TargetFrameContent.TargetFrameContentMain, "TOPRIGHT", -88, -30)
-		if ( not UnitPlayerControlled(frame.unit) and UnitIsTapDenied(frame.unit) ) then
-			frame.nameBackground:SetVertexColor(0.5, 0.5, 0.5);
+		--if ( not UnitPlayerControlled(frame.unit) and UnitIsTapDenied(frame.unit) ) then
+		if tClassColorNameBG then
+			local _, PlayerC = UnitClass("player")
+			local r, g, b = GetClassColor(PlayerC)
+			frame.nameBackground:SetVertexColor(r, g, b);
 		else
-			local r,g,b = UnitSelectionColor(frame.unit)
-			frame.nameBackground:SetVertexColor(r,g,b);
+		frame.nameBackground:SetVertexColor(0, 0, 0, 0.2);
 		end
+		--else
+		--	local r,g,b = UnitSelectionColor(frame.unit)
+		--	frame.nameBackground:SetVertexColor(r,g,b);
+		--end
 	end
 
 	hooksecurefunc(frame, "CheckClassification", function()
